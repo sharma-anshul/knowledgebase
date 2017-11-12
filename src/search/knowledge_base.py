@@ -131,16 +131,16 @@ class KnowledgeBase(object):
             return response['_source']
 
     def index(self, article, refresh=True):
-		"""
+        """
         Index an article in the Knowledge Base.
 
         Args:
             article(dict): Dictionary representing an article in the knowledge base.
-				Must follow the field names defined in the mapping.
+                Must follow the field names defined in the mapping.
 
         Returns:
             tuple(bool, str): Returns (True, article_id) if article is successfully indexed.
-				(False, None) otherwise.
+                (False, None) otherwise.
         """
         try:
             response = self.client.index(
@@ -152,12 +152,12 @@ class KnowledgeBase(object):
         except:
             return False, None
         else:
-			# Initialize view count for newly indexed article.
+            # Initialize view count for newly indexed article.
             self.redis.set(response['_id'], 0)
             return response['created'], response['_id'] 
 
     def delete(self, article_id, refresh=True):
-		"""
+        """
         Delete an article from the Knowledge Base.
 
         Args:
@@ -176,43 +176,40 @@ class KnowledgeBase(object):
         except:
             return False
         else:
-			# Remove article key from Redis.
+            # Remove article key from Redis.
             self.redis.delete(article_id)
             return response['found']
 
     def _in_bulk(self, objects):
-		"""
-		Helper function to facilitate bulk operations.
+        """
+        Helper function to facilitate bulk operations.
 
-		Args:
-			objects(list[dict]): A list of dictionaries of the format
-				[
-					{
-						'_op_type': String representing operation, valid choices are
+        Args:
+            objects(list[dict]): A list of dictionaries of the format
+                [
+                    {
+                        '_op_type': String representing operation, valid choices are
 							'index', 'create', 'update' and 'delete',
-						'body': Contains updated document or new document to be created,
-						'id': ID of article to be deleted. 
-					},
-					.
-					.
-				]
-					
-		"""
+                        'body': Contains updated document or new document to be created,
+                        'id': ID of article to be deleted. 
+                    },
+                    .
+                    .
+                ]
+        """
         bulk(self.client, objects, index=self.INDEX)
 
     def _init_index(self):
-		"""
-		Helper method to initialize Knowledge base store.
+        """
+        Helper method to initialize Knowledge base store.
 
-		Uses the JSON mappings to initialize an Elasticsearch index with a type mapping
-		for storing articles.
+        Uses the JSON mappings to initialize an Elasticsearch index with a type mapping
+        for storing articles.
 
-		Returns:
-			tuple(bool, str): Returns a boolean value representing whether the index and
-				mapping were initialized and a string representing the status.
-
-		"""
-	
+        Returns:
+            tuple(bool, str): Returns a boolean value representing whether the index and
+                mapping were initialized and a string representing the status.
+        """
         index_mapping = json.load(open(self.INDEX_PATH))
         type_mapping = json.load(open(self.TYPE_PATH))
 
