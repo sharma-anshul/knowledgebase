@@ -52,7 +52,7 @@ class KnowledgeBase(object):
             host=self.HOSTS[0],
         )
 
-    def search(self, query_text, locale=None):
+    def search(self, query_text, locale=None, fields=None):
         """
         Return relevant articles given search text.
 
@@ -65,10 +65,22 @@ class KnowledgeBase(object):
         Args:
             query_text(str): Text to be searched.
             locale(str): String to filter results by location.
+            fields(list(str)): If specified, restrict the fields returned to
+                this list.
 
         Returns:
-            List[tuple(str, str)]: Returns a list of ranked tuples containing
-                (article_id, Title of article).
+            list[dict]: Returns a ranked list of dictionaries representing articles
+                [
+                    {
+                        'id': str,
+                        'title': str,
+                        'body': str,
+                        'locale': str,
+                    },
+                    .
+                    .
+                ]
+                
         """
         # Create Search object to "match" query text against the title and body
         # of articles stored in the Knowledge base.
@@ -87,30 +99,39 @@ class KnowledgeBase(object):
         if locale:
             s = s.filter('term', locale=locale)
 
+        # Restrict fields if specified.
+        s = s.source(fields)
+   
         response = s.execute()
-
-        results = []
+        results, result_dict = [], {}
         for hit in response:
             article_id = hit.meta['id']
+            result_dict[article_id] = hit.__dict__['_d_']
+            result_dict[article_id]['id'] = article_id
 
             # Retrieve view count for each relevant article.
-            results.append((article_id, hit.title, self.redis.get(article_id)))
+            results.append((article_id, self.redis.get(article_id)))
 
-		# Rank results using Ranking function.
-		ranked_results = Ranker.rank(results)
+        # Rank results using Ranking function. Currently sorts relevant results by
+        # view counts.
+        ranked_results = Ranker.rank(results)
+        ranked_articles = [result_dict[article_id] for article_id in ranked_results]
 
-        return ranked_results
+        return ranked_articles
 
-    def get(self, article_id):
+    def get(self, article_id, fields=None):
         """
         Return an article specified by the given article_id.
 
         Args:
             article_id(str): Unique ID representing an article in the knowledge base.
+            fields(list[str]): If specified, restrict the fields returned to
+                this list.
 
         Returns:
             dict: Dictionary representing a document, of the following format
                 {
+                    'id': str,
                     'title': str,
                     'body': str,
                     'locale': str,
@@ -122,13 +143,17 @@ class KnowledgeBase(object):
                 index=self.INDEX,
                 doc_type=self.TYPE,
                 id=article_id,
+                _source=fields,
             )
         except:
             return None
         else:
-			# Increment view count for accessed article.
+            # Increment view count for accessed article.
             self.redis.incr(article_id)
-            return response['_source']
+            article = response['_source']
+            article['id'] = article_id
+            
+            return article
 
     def index(self, article, refresh=True):
         """

@@ -7,20 +7,21 @@ class Ranker(object):
     the final results.
     """
 
-    def rank(self, unranked_results):
+    @classmethod
+    def rank(cls, unranked_results):
         """
             Rank results using a custom metric.
 
             Args:
                 unranked_results(list(tuple)): List of unranked tuples of the form
-                    (article_id, article_title, view_count)
+                    (article_id, view_count)
 
             Returns:
-                list(tuple): A list of ranked tuples of the form (article_id, article_title).
+                list(str): A ranked list of article ids.
         """
         # Sort results in descending order on the basis of View Counts.
-        sorted_results = sorted(unranked_results, key=lambda x: x[2], reverse=True)
+        sorted_results = list(sorted(unranked_results, key=lambda x: x[1], reverse=True))
 
-        ranked_results = [tup[:2] for tup in sorted_results]
+        ranked_results = [tup[0] for tup in sorted_results]
 
         return ranked_results
