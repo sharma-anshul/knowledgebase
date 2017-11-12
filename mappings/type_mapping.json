@@ -1,0 +1,9 @@
+{
+    "article": {
+        "properties": {
+            "title": {"type": "text"},
+            "body": {"type": "text"},
+            "locale": {"type": "keyword"}
+        }
+    }
+}

@@ -1,0 +1,4 @@
+elasticsearch
+elasticsearch-dsl
+flask
+redis
