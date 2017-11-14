@@ -122,6 +122,8 @@ class KnowledgeBase(object):
     def get(self, article_id, fields=None):
         """
         Return an article specified by the given article_id.
+	
+	Increments view count for the specific article as well.
 
         Args:
             article_id(str): Unique ID representing an article in the knowledge base.
@@ -159,6 +161,8 @@ class KnowledgeBase(object):
         """
         Index an article in the Knowledge Base.
 
+	Intializes view count for the indexed article as well.
+	
         Args:
             article(dict): Dictionary representing an article in the knowledge base.
                 Must follow the field names defined in the mapping.
@@ -184,6 +188,8 @@ class KnowledgeBase(object):
     def delete(self, article_id, refresh=True):
         """
         Delete an article from the Knowledge Base.
+	
+	Removes view count for the specific article as well.
 
         Args:
             article_id(str): Unique ID representing an article in the knowledge base.
